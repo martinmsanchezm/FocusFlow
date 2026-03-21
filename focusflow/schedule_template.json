@@ -1,0 +1,57 @@
+{
+  "schedule": {
+    "monday": [
+      { "start": "08:00", "end": "08:30", "task": "Morning Review", "type": "work" },
+      { "start": "08:30", "end": "10:00", "task": "Deep Work Block 1", "type": "work" },
+      { "start": "10:00", "end": "10:15", "task": "Break", "type": "break" },
+      { "start": "10:15", "end": "12:00", "task": "Deep Work Block 2", "type": "work" },
+      { "start": "12:00", "end": "13:00", "task": "Lunch", "type": "lunch" },
+      { "start": "13:00", "end": "15:00", "task": "Meetings / Calls", "type": "work" },
+      { "start": "15:00", "end": "15:10", "task": "Break", "type": "break" },
+      { "start": "15:10", "end": "17:30", "task": "Project Work", "type": "work" }
+    ],
+    "tuesday": [
+      { "start": "08:00", "end": "08:30", "task": "Morning Review", "type": "work" },
+      { "start": "08:30", "end": "10:30", "task": "Code Review & PR", "type": "work" },
+      { "start": "10:30", "end": "10:45", "task": "Break", "type": "break" },
+      { "start": "10:45", "end": "12:00", "task": "Feature Development", "type": "work" },
+      { "start": "12:00", "end": "13:00", "task": "Lunch", "type": "lunch" },
+      { "start": "13:00", "end": "14:00", "task": "Team Standup + Planning", "type": "work" },
+      { "start": "14:00", "end": "15:30", "task": "Deep Work Block", "type": "work" },
+      { "start": "15:30", "end": "15:40", "task": "Break", "type": "break" },
+      { "start": "15:40", "end": "17:30", "task": "Documentation & Testing", "type": "work" }
+    ],
+    "wednesday": [
+      { "start": "08:00", "end": "08:30", "task": "Morning Review", "type": "work" },
+      { "start": "08:30", "end": "10:00", "task": "Deep Work Block 1", "type": "work" },
+      { "start": "10:00", "end": "10:15", "task": "Break", "type": "break" },
+      { "start": "10:15", "end": "12:00", "task": "Deep Work Block 2", "type": "work" },
+      { "start": "12:00", "end": "13:00", "task": "Lunch", "type": "lunch" },
+      { "start": "13:00", "end": "14:30", "task": "Sprint Review", "type": "work" },
+      { "start": "14:30", "end": "14:40", "task": "Break", "type": "break" },
+      { "start": "14:40", "end": "17:30", "task": "Project Work", "type": "work" }
+    ],
+    "thursday": [
+      { "start": "08:00", "end": "08:30", "task": "Morning Review", "type": "work" },
+      { "start": "08:30", "end": "10:30", "task": "Research & Learning", "type": "work" },
+      { "start": "10:30", "end": "10:45", "task": "Break", "type": "break" },
+      { "start": "10:45", "end": "12:00", "task": "Feature Development", "type": "work" },
+      { "start": "12:00", "end": "13:00", "task": "Lunch", "type": "lunch" },
+      { "start": "13:00", "end": "15:00", "task": "Pair Programming", "type": "work" },
+      { "start": "15:00", "end": "15:10", "task": "Break", "type": "break" },
+      { "start": "15:10", "end": "17:30", "task": "Bug Fixes & Refactoring", "type": "work" }
+    ],
+    "friday": [
+      { "start": "08:00", "end": "08:30", "task": "Morning Review", "type": "work" },
+      { "start": "08:30", "end": "10:00", "task": "Week Review & Planning", "type": "work" },
+      { "start": "10:00", "end": "10:15", "task": "Break", "type": "break" },
+      { "start": "10:15", "end": "12:00", "task": "Deep Work Block", "type": "work" },
+      { "start": "12:00", "end": "13:00", "task": "Lunch", "type": "lunch" },
+      { "start": "13:00", "end": "14:30", "task": "Retrospective", "type": "work" },
+      { "start": "14:30", "end": "14:40", "task": "Break", "type": "break" },
+      { "start": "14:40", "end": "17:00", "task": "Wrap-up & Next Week Prep", "type": "work" }
+    ],
+    "saturday": [],
+    "sunday": []
+  }
+}
