@@ -40,7 +40,16 @@ class OverlayWindow:
         root.title("FocusFlow")
         root.overrideredirect(True)  # Frameless
         root.configure(bg=BG_COLOR)
-        root.attributes("-topmost", config.get("always_on_top", True))
+        self._topmost = config.get("always_on_top", True)
+        root.attributes("-topmost", self._topmost)
+
+        # On Windows, use Win32 API to force HWND_TOPMOST which is more
+        # persistent than tkinter's -topmost attribute alone.
+        if self._is_windows and self._topmost:
+            root.after(100, self._force_topmost_win32)
+
+        # Re-assert topmost every 5 seconds to survive focus changes
+        self._start_topmost_loop()
 
         # Position from saved config
         x = config.get("window_x", 100)
@@ -116,7 +125,10 @@ class OverlayWindow:
             self._accent_bar.config(bg=color)
 
     def set_topmost(self, on: bool) -> None:
+        self._topmost = on
         self._root.attributes("-topmost", on)
+        if self._is_windows:
+            self._force_topmost_win32()
 
     def set_opacity(self, alpha: float) -> None:
         self._opacity = alpha
@@ -168,6 +180,37 @@ class OverlayWindow:
             widget = getattr(self, attr, None)
             if widget:
                 widget.configure(bg=bg)
+
+    # --- Always on top enforcement ---
+
+    def _force_topmost_win32(self) -> None:
+        """Use SetWindowPos with HWND_TOPMOST via Win32 API for persistent topmost."""
+        if not self._is_windows or not self._topmost:
+            return
+        try:
+            import ctypes
+            hwnd = ctypes.windll.user32.GetParent(self._root.winfo_id())
+            # HWND_TOPMOST = -1, SWP_NOMOVE = 0x0002, SWP_NOSIZE = 0x0001
+            # SWP_NOACTIVATE = 0x0010
+            SWP_NOMOVE = 0x0002
+            SWP_NOSIZE = 0x0001
+            SWP_NOACTIVATE = 0x0010
+            HWND_TOPMOST = -1
+            ctypes.windll.user32.SetWindowPos(
+                hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+            )
+        except (AttributeError, OSError):
+            pass
+
+    def _start_topmost_loop(self) -> None:
+        """Re-assert topmost every 5 seconds to survive focus changes."""
+        if self._topmost:
+            self._root.attributes("-topmost", True)
+            self._root.lift()
+            if self._is_windows:
+                self._force_topmost_win32()
+        self._root.after(5000, self._start_topmost_loop)
 
     # --- Dragging ---
 
