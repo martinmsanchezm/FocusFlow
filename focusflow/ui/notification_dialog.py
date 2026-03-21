@@ -20,9 +20,12 @@ TEXT_COLOR = "#e8e8f0"
 class NotificationDialog:
     """Shows a modal-like always-on-top notification for task transitions."""
 
+    MAX_DISPLAY_CHARS = 35
+
     def __init__(self, parent: tk.Tk):
         self._parent = parent
         self._dialog: tk.Toplevel | None = None
+        self._tooltip: tk.Toplevel | None = None
 
     def show(self, task_name: str, time_range: str, task_type: str) -> None:
         """Display the notification dialog. Closes any existing one first."""
@@ -61,16 +64,27 @@ class NotificationDialog:
         )
         header.pack(pady=(16, 4))
 
-        # Task name
+        # Task name — truncate if too long, show full name on hover
+        if len(task_name) > self.MAX_DISPLAY_CHARS:
+            display_name = task_name[: self.MAX_DISPLAY_CHARS] + "…"
+        else:
+            display_name = task_name
+
         name_label = tk.Label(
             dlg,
-            text=task_name,
+            text=display_name,
             font=("Segoe UI Semibold", 16),
             fg=accent,
             bg=BG_COLOR,
-            wraplength=320,
         )
         name_label.pack(pady=(0, 4))
+
+        if len(task_name) > self.MAX_DISPLAY_CHARS:
+            name_label.bind(
+                "<Enter>",
+                lambda e: self._show_tooltip(e, task_name, accent),
+            )
+            name_label.bind("<Leave>", lambda e: self._hide_tooltip())
 
         # Time range
         time_label = tk.Label(
@@ -108,12 +122,46 @@ class NotificationDialog:
 
     def dismiss(self) -> None:
         """Close the notification dialog."""
+        self._hide_tooltip()
         if self._dialog is not None:
             try:
                 self._dialog.destroy()
             except tk.TclError:
                 pass
             self._dialog = None
+
+    def _show_tooltip(self, event: tk.Event, full_text: str, accent: str) -> None:
+        """Show full task name in a tooltip below the label."""
+        self._hide_tooltip()
+        if self._dialog is None:
+            return
+        x = self._dialog.winfo_x() + 20
+        y = self._dialog.winfo_y() + self._dialog.winfo_height() + 4
+        self._tooltip = tk.Toplevel(self._dialog)
+        self._tooltip.overrideredirect(True)
+        self._tooltip.attributes("-topmost", True)
+        self._tooltip.configure(bg=accent)
+        label = tk.Label(
+            self._tooltip,
+            text=full_text,
+            font=("Segoe UI", 10),
+            fg=TEXT_COLOR,
+            bg=BG_COLOR,
+            padx=8,
+            pady=4,
+            wraplength=320,
+        )
+        label.pack(padx=1, pady=1)
+        self._tooltip.geometry(f"+{x}+{y}")
+
+    def _hide_tooltip(self) -> None:
+        """Destroy the tooltip if it exists."""
+        if self._tooltip is not None:
+            try:
+                self._tooltip.destroy()
+            except tk.TclError:
+                pass
+            self._tooltip = None
 
     def _keep_on_top(self) -> None:
         """Periodically re-assert topmost status while dialog is open."""
