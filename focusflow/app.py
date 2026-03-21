@@ -124,6 +124,7 @@ class FocusFlowApp:
         filepath = filedialog.asksaveasfilename(
             title="Export Current Schedule",
             defaultextension=".json",
+            initialfile="my_schedule.json",
             filetypes=[("JSON files", "*.json")],
         )
         if not filepath:
