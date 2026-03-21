@@ -187,7 +187,6 @@ class AgendaWindow:
                 font=("Segoe UI", 8),
                 fg=color,
                 bg=row_bg,
-                padx=(16, 0),
             )
             dot.pack(side="left", padx=(16, 4), pady=2)
 
