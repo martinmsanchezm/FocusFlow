@@ -73,7 +73,7 @@ class OverlayWindow:
         self._accent_bar = tk.Frame(self._inner, bg=FREE_COLOR, height=3)
         self._accent_bar.pack(fill="x", pady=(0, 4))
 
-        # Task name label
+        # Task name label — truncated with tooltip for long names
         self._task_label = tk.Label(
             self._inner,
             text="Loading...",
@@ -83,6 +83,10 @@ class OverlayWindow:
             anchor="w",
         )
         self._task_label.pack(fill="x")
+        self._full_task_name = ""
+        self._tooltip = None
+        self._task_label.bind("<Enter>", self._show_tooltip)
+        self._task_label.bind("<Leave>", self._hide_tooltip)
 
         # Time range label — high contrast, solid color
         self._time_label = tk.Label(
@@ -113,17 +117,22 @@ class OverlayWindow:
 
     def update_task(self, task: Optional[TaskBlock], is_day_off: bool) -> None:
         """Update the display with the current task or status."""
+        max_chars = 28  # Fits comfortably in the 280px overlay
         if is_day_off:
-            self._task_label.config(text="Day off  \U0001f389", fg=DAY_OFF_COLOR)
+            self._full_task_name = "Day off  \U0001f389"
+            self._task_label.config(text=self._full_task_name, fg=DAY_OFF_COLOR)
             self._time_label.config(text="No schedule today")
             self._accent_bar.config(bg=DAY_OFF_COLOR)
         elif task is None:
-            self._task_label.config(text="Free time", fg=FREE_COLOR)
+            self._full_task_name = "Free time"
+            self._task_label.config(text=self._full_task_name, fg=FREE_COLOR)
             self._time_label.config(text="No active task")
             self._accent_bar.config(bg=FREE_COLOR)
         else:
             color = TASK_COLORS.get(task.task_type, TASK_COLORS["work"])
-            self._task_label.config(text=task.task, fg=color)
+            self._full_task_name = task.task
+            display = task.task if len(task.task) <= max_chars else task.task[:max_chars - 1] + "\u2026"
+            self._task_label.config(text=display, fg=color)
             self._time_label.config(text=f"{task.start_str} \u2013 {task.end_str}")
             self._accent_bar.config(bg=color)
 
@@ -151,6 +160,41 @@ class OverlayWindow:
         """Bind right-click to all overlay widgets."""
         for widget in (self._root, self._outer, self._inner, self._task_label, self._time_label, self._accent_bar):
             widget.bind("<ButtonPress-3>", callback)
+
+    # --- Tooltip for long task names ---
+
+    def _show_tooltip(self, event: tk.Event) -> None:
+        """Show full task name tooltip if text was truncated."""
+        if len(self._full_task_name) <= 28:
+            return
+        self._hide_tooltip()
+        x = self._root.winfo_x()
+        y = self._root.winfo_y() + self._root.winfo_height() + 4
+        self._tooltip = tk.Toplevel(self._root)
+        self._tooltip.overrideredirect(True)
+        self._tooltip.attributes("-topmost", True)
+        self._tooltip.configure(bg=BORDER_COLOR)
+        label = tk.Label(
+            self._tooltip,
+            text=self._full_task_name,
+            font=("Segoe UI", 10),
+            fg=TEXT_COLOR,
+            bg="#1a1a2e",
+            padx=8,
+            pady=4,
+            wraplength=300,
+        )
+        label.pack(padx=1, pady=1)
+        self._tooltip.geometry(f"+{x}+{y}")
+
+    def _hide_tooltip(self, event: tk.Event = None) -> None:
+        """Hide the tooltip."""
+        if self._tooltip:
+            try:
+                self._tooltip.destroy()
+            except tk.TclError:
+                pass
+            self._tooltip = None
 
     # --- Win32 always-on-top enforcement ---
 
