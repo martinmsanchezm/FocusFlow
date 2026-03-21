@@ -166,6 +166,7 @@ class OverlayWindow:
 
         try:
             import ctypes
+            import ctypes.wintypes
             self._user32 = ctypes.windll.user32
             # Force a render so winfo_id returns the real handle
             self._root.update_idletasks()
@@ -222,13 +223,21 @@ class OverlayWindow:
         if not self._is_windows or not self._hwnd:
             return
         try:
+            import ctypes
             alpha_byte = max(0, min(255, int(255 * self._opacity)))
-            self._user32.SetLayeredWindowAttributes(
-                self._hwnd, 0, alpha_byte, _LWA_ALPHA,
+            # SetLayeredWindowAttributes(HWND, COLORREF, BYTE, DWORD)
+            result = self._user32.SetLayeredWindowAttributes(
+                ctypes.wintypes.HWND(self._hwnd),
+                ctypes.wintypes.COLORREF(0),
+                ctypes.wintypes.BYTE(alpha_byte),
+                ctypes.wintypes.DWORD(_LWA_ALPHA),
             )
-            # Disable tkinter's own alpha to avoid double-application
-            self._root.attributes("-alpha", 1.0)
-        except (AttributeError, OSError):
+            if result:
+                # Disable tkinter's own alpha to avoid double-application
+                self._root.attributes("-alpha", 1.0)
+            else:
+                self._root.attributes("-alpha", self._opacity)
+        except (AttributeError, OSError, Exception):
             # Fallback
             self._root.attributes("-alpha", self._opacity)
 
