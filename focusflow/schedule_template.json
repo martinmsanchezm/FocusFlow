@@ -51,7 +51,27 @@
       { "start": "14:30", "end": "14:40", "task": "Break", "type": "break" },
       { "start": "14:40", "end": "17:00", "task": "Wrap-up & Next Week Prep", "type": "work" }
     ],
-    "saturday": [],
-    "sunday": []
+    "saturday": [
+      { "start": "08:00", "end": "08:30", "task": "Morning Routine", "type": "work" },
+      { "start": "08:30", "end": "09:30", "task": "Exercise / Gym", "type": "work" },
+      { "start": "09:30", "end": "09:45", "task": "Break", "type": "break" },
+      { "start": "09:45", "end": "12:00", "task": "Personal Project", "type": "work" },
+      { "start": "12:00", "end": "13:00", "task": "Lunch", "type": "lunch" },
+      { "start": "13:00", "end": "14:30", "task": "Learning / Courses", "type": "work" },
+      { "start": "14:30", "end": "14:45", "task": "Break", "type": "break" },
+      { "start": "14:45", "end": "16:00", "task": "Errands / Chores", "type": "work" },
+      { "start": "16:00", "end": "18:00", "task": "Free Time / Hobbies", "type": "break" }
+    ],
+    "sunday": [
+      { "start": "09:00", "end": "09:30", "task": "Morning Routine", "type": "work" },
+      { "start": "09:30", "end": "10:30", "task": "Exercise / Walk", "type": "work" },
+      { "start": "10:30", "end": "10:45", "task": "Break", "type": "break" },
+      { "start": "10:45", "end": "12:00", "task": "Weekly Planning", "type": "work" },
+      { "start": "12:00", "end": "13:30", "task": "Lunch", "type": "lunch" },
+      { "start": "13:30", "end": "15:00", "task": "Reading / Study", "type": "work" },
+      { "start": "15:00", "end": "15:15", "task": "Break", "type": "break" },
+      { "start": "15:15", "end": "17:00", "task": "Meal Prep & Week Setup", "type": "work" },
+      { "start": "17:00", "end": "19:00", "task": "Rest & Relax", "type": "break" }
+    ]
   }
 }
