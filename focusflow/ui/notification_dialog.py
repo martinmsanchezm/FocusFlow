@@ -99,9 +99,9 @@ class NotificationDialog:
         )
         btn.pack(pady=(12, 0))
 
-        # Keep focus and grab input so it can't be ignored
+        # Keep focus — but do NOT grab_set() as that can interfere with
+        # the root window and cause the app to close when the dialog is dismissed.
         dlg.focus_force()
-        dlg.grab_set()
 
         # Re-raise periodically in case something covers it
         self._keep_on_top()
@@ -110,7 +110,6 @@ class NotificationDialog:
         """Close the notification dialog."""
         if self._dialog is not None:
             try:
-                self._dialog.grab_release()
                 self._dialog.destroy()
             except tk.TclError:
                 pass

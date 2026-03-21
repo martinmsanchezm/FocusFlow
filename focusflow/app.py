@@ -61,8 +61,15 @@ class FocusFlowApp:
         # Save position on close
         self._root.protocol("WM_DELETE_WINDOW", self._exit)
 
-        # Initial display update and start polling
-        self._poll()
+        # Update display immediately (without notifications), then schedule
+        # the first full poll after mainloop is running to avoid the
+        # notification grab_set killing the root window at startup.
+        current_task = self._schedule.get_current_task()
+        self._overlay.update_task(current_task, self._schedule.is_day_off())
+        # Seed the detector so the first poll doesn't treat the current task
+        # as a "transition" and fire a notification on startup.
+        self._detector.check_transition(current_task)
+        self._root.after(1000, self._poll)
 
     def run(self) -> None:
         """Start the tkinter main loop."""
