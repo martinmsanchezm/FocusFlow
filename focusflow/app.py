@@ -16,6 +16,7 @@ from notifier import TransitionDetector
 from ui.overlay import OverlayWindow
 from ui.context_menu import ContextMenu
 from ui.notification_dialog import NotificationDialog
+from ui.agenda_window import AgendaWindow
 
 POLL_INTERVAL_MS = 10_000  # 10 seconds
 
@@ -37,7 +38,9 @@ class FocusFlowApp:
         # Build UI components
         self._overlay = OverlayWindow(self._root, self._config)
         self._notification = NotificationDialog(self._root)
+        self._agenda = AgendaWindow(self._root)
         self._context_menu = ContextMenu(self._root, {
+            "show_agenda": self._show_agenda,
             "import_schedule": self._import_schedule,
             "export_schedule": self._export_schedule,
             "export_template": self._export_template,
@@ -157,6 +160,10 @@ class FocusFlowApp:
         self._config["always_on_top"] = new_state
         self._overlay.set_topmost(new_state)
         self._save_state()
+
+    def _show_agenda(self) -> None:
+        """Open the weekly agenda viewer."""
+        self._agenda.show(self._schedule)
 
     def _show_about(self) -> None:
         messagebox.showinfo(

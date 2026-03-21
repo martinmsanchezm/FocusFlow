@@ -22,6 +22,7 @@ a = Analysis(
         'ui.overlay',
         'ui.context_menu',
         'ui.notification_dialog',
+        'ui.agenda_window',
     ],
     hookspath=[],
     hooksconfig={},

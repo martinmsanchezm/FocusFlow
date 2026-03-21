@@ -32,6 +32,8 @@ class ContextMenu:
 
     def _build(self) -> None:
         m = self._menu
+        m.add_command(label="\U0001f4c5 Ver Agenda Semanal", command=self._callbacks["show_agenda"])
+        m.add_separator()
         m.add_command(label="Import Schedule", command=self._callbacks["import_schedule"])
         m.add_command(label="Export Current Schedule", command=self._callbacks["export_schedule"])
         m.add_command(label="Export Blank Template", command=self._callbacks["export_template"])
