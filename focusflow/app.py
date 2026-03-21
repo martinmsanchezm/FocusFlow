@@ -73,12 +73,16 @@ class FocusFlowApp:
 
     def run(self) -> None:
         """Start the tkinter main loop."""
+        self._exiting = False
         self._root.mainloop()
+        self._root.destroy()
 
     # --- Polling ---
 
     def _poll(self) -> None:
         """Check the current task and update the display. Runs every 10s."""
+        if self._exiting:
+            return
         current_task = self._schedule.get_current_task()
         is_day_off = self._schedule.is_day_off()
 
@@ -184,7 +188,8 @@ class FocusFlowApp:
 
     def _exit(self) -> None:
         self._save_state()
-        self._root.destroy()
+        self._exiting = True
+        self._root.quit()
 
     # --- Helpers ---
 

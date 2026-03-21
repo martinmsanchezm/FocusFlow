@@ -234,11 +234,14 @@ class OverlayWindow:
 
     def _start_topmost_loop(self) -> None:
         """Re-assert topmost every 1 second to survive focus changes."""
-        if self._topmost:
-            self._root.attributes("-topmost", True)
-            self._root.lift()
-            self._apply_win32_topmost()
-        self._root.after(1000, self._start_topmost_loop)
+        try:
+            if self._topmost:
+                self._root.attributes("-topmost", True)
+                self._root.lift()
+                self._apply_win32_topmost()
+            self._root.after(1000, self._start_topmost_loop)
+        except tk.TclError:
+            pass  # Window is being destroyed, stop the loop
 
     # --- Dragging ---
 

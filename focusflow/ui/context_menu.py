@@ -48,5 +48,5 @@ class ContextMenu:
         """Display the context menu at the cursor position."""
         try:
             self._menu.tk_popup(event.x_root, event.y_root)
-        finally:
-            self._menu.grab_release()
+        except tk.TclError:
+            pass
