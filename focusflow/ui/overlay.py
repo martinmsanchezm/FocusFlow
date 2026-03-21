@@ -1,8 +1,7 @@
 """
 Main overlay window for FocusFlow.
 A compact, draggable, always-on-top widget that displays the current active task.
-Uses transparent-color technique so text stays fully opaque even when the
-window background is semi-transparent.
+Uses Win32 API (SetWindowPos + extended styles) for persistent topmost on Windows.
 """
 
 import sys
@@ -13,9 +12,6 @@ from scheduler import TaskBlock
 
 # Color scheme
 BG_COLOR = "#111118"
-# This key color is set as the transparent color on Windows; the actual
-# visible background is drawn by frames layered on top.
-TRANSPARENT_KEY = "#010102"
 BORDER_COLOR = "#2a2a3a"
 TEXT_COLOR = "#e8e8f0"
 TIME_COLOR = "#E0E0E0"
@@ -27,6 +23,19 @@ TASK_COLORS = {
 FREE_COLOR = "#6b7280"
 DAY_OFF_COLOR = "#a78bfa"
 
+# Win32 constants
+_GWL_EXSTYLE = -20
+_WS_EX_TOPMOST = 0x00000008
+_WS_EX_TOOLWINDOW = 0x00000080
+_WS_EX_LAYERED = 0x00080000
+_HWND_TOPMOST = -1
+_HWND_NOTOPMOST = -2
+_SWP_NOMOVE = 0x0002
+_SWP_NOSIZE = 0x0001
+_SWP_NOACTIVATE = 0x0010
+_SWP_FLAGS = _SWP_NOMOVE | _SWP_NOSIZE | _SWP_NOACTIVATE
+_LWA_ALPHA = 0x00000002
+
 
 class OverlayWindow:
     """The main floating widget showing the current task."""
@@ -35,6 +44,7 @@ class OverlayWindow:
         self._root = root
         self._config = config
         self._is_windows = sys.platform == "win32"
+        self._hwnd = None
 
         # Configure the main window
         root.title("FocusFlow")
@@ -43,28 +53,13 @@ class OverlayWindow:
         self._topmost = config.get("always_on_top", True)
         root.attributes("-topmost", self._topmost)
 
-        # On Windows, use Win32 API to force HWND_TOPMOST which is more
-        # persistent than tkinter's -topmost attribute alone.
-        if self._is_windows and self._topmost:
-            root.after(100, self._force_topmost_win32)
-
-        # Re-assert topmost every 5 seconds to survive focus changes
-        self._start_topmost_loop()
-
         # Position from saved config
         x = config.get("window_x", 100)
         y = config.get("window_y", 50)
         root.geometry(f"280x65+{x}+{y}")
 
-        # Transparency: on Windows use transparentcolor so only the background
-        # fades while text labels stay fully opaque.
+        # Opacity setting
         self._opacity = config.get("opacity", 1.0)
-        if self._is_windows:
-            # We do NOT use -alpha (that fades everything including text).
-            # Instead we blend the background color toward transparency.
-            self._apply_bg_transparency()
-        else:
-            root.attributes("-alpha", self._opacity)
 
         # Outer frame with subtle border effect
         self._outer = tk.Frame(root, bg=BORDER_COLOR, padx=1, pady=1)
@@ -108,6 +103,14 @@ class OverlayWindow:
             widget.bind("<ButtonPress-1>", self._on_drag_start)
             widget.bind("<B1-Motion>", self._on_drag_move)
 
+        # Bind FocusOut to re-assert topmost immediately when losing focus
+        root.bind("<FocusOut>", lambda e: self._apply_win32_topmost())
+
+        # After the window is rendered, apply Win32 styles and start the loop
+        root.after(200, self._init_win32)
+
+    # --- Task display ---
+
     def update_task(self, task: Optional[TaskBlock], is_day_off: bool) -> None:
         """Update the display with the current task or status."""
         if is_day_off:
@@ -127,13 +130,16 @@ class OverlayWindow:
     def set_topmost(self, on: bool) -> None:
         self._topmost = on
         self._root.attributes("-topmost", on)
-        if self._is_windows:
-            self._force_topmost_win32()
+        if self._is_windows and self._hwnd:
+            if on:
+                self._apply_win32_topmost()
+            else:
+                self._remove_win32_topmost()
 
     def set_opacity(self, alpha: float) -> None:
         self._opacity = alpha
-        if self._is_windows:
-            self._apply_bg_transparency()
+        if self._is_windows and self._hwnd:
+            self._apply_win32_opacity()
         else:
             self._root.attributes("-alpha", alpha)
 
@@ -146,71 +152,93 @@ class OverlayWindow:
         for widget in (self._root, self._outer, self._inner, self._task_label, self._time_label, self._accent_bar):
             widget.bind("<ButtonPress-3>", callback)
 
-    # --- Transparency ---
+    # --- Win32 always-on-top enforcement ---
 
-    def _apply_bg_transparency(self) -> None:
+    def _init_win32(self) -> None:
         """
-        On Windows, blend the background color with black according to opacity
-        to simulate background-only transparency while keeping text fully opaque.
-        At opacity 1.0 the background is the normal dark color.
-        At lower opacity the background becomes lighter/more faded.
-        Uses -transparentcolor for true see-through when opacity < 1.
+        After the window is visible, grab the real HWND and apply
+        extended window styles + topmost + opacity via Win32 API.
         """
-        if self._opacity >= 1.0:
-            # Full opacity — disable any transparent color
-            try:
-                self._root.attributes("-transparentcolor", "")
-            except tk.TclError:
-                pass
-            self._root.attributes("-alpha", 1.0)
-            bg = BG_COLOR
-        else:
-            # Use -alpha for the overall window but boost text by keeping labels
-            # at full contrast. This is the simplest reliable approach on Windows.
+        if not self._is_windows:
             self._root.attributes("-alpha", self._opacity)
-            bg = BG_COLOR
-
-        self._root.configure(bg=bg)
-        # Update child frame backgrounds if they exist
-        for attr in ("_outer", "_inner"):
-            widget = getattr(self, attr, None)
-            if widget:
-                widget.configure(bg=BORDER_COLOR if attr == "_outer" else bg)
-        for attr in ("_task_label", "_time_label"):
-            widget = getattr(self, attr, None)
-            if widget:
-                widget.configure(bg=bg)
-
-    # --- Always on top enforcement ---
-
-    def _force_topmost_win32(self) -> None:
-        """Use SetWindowPos with HWND_TOPMOST via Win32 API for persistent topmost."""
-        if not self._is_windows or not self._topmost:
+            self._start_topmost_loop()
             return
+
         try:
             import ctypes
-            hwnd = ctypes.windll.user32.GetParent(self._root.winfo_id())
-            # HWND_TOPMOST = -1, SWP_NOMOVE = 0x0002, SWP_NOSIZE = 0x0001
-            # SWP_NOACTIVATE = 0x0010
-            SWP_NOMOVE = 0x0002
-            SWP_NOSIZE = 0x0001
-            SWP_NOACTIVATE = 0x0010
-            HWND_TOPMOST = -1
-            ctypes.windll.user32.SetWindowPos(
-                hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+            self._user32 = ctypes.windll.user32
+            # Force a render so winfo_id returns the real handle
+            self._root.update_idletasks()
+            self._hwnd = self._user32.GetParent(self._root.winfo_id())
+
+            # Set extended styles: TOPMOST + TOOLWINDOW (hide from taskbar/alt-tab) + LAYERED
+            style = self._user32.GetWindowLongW(self._hwnd, _GWL_EXSTYLE)
+            self._user32.SetWindowLongW(
+                self._hwnd, _GWL_EXSTYLE,
+                style | _WS_EX_TOPMOST | _WS_EX_TOOLWINDOW | _WS_EX_LAYERED,
+            )
+
+            # Apply topmost via SetWindowPos
+            self._apply_win32_topmost()
+
+            # Apply opacity via SetLayeredWindowAttributes (text stays solid)
+            self._apply_win32_opacity()
+
+        except (AttributeError, OSError):
+            # Fallback to tkinter-only approach
+            self._hwnd = None
+            self._root.attributes("-alpha", self._opacity)
+
+        self._start_topmost_loop()
+
+    def _apply_win32_topmost(self) -> None:
+        """Force HWND_TOPMOST via SetWindowPos."""
+        if not self._is_windows or not self._hwnd or not self._topmost:
+            return
+        try:
+            self._user32.SetWindowPos(
+                self._hwnd, _HWND_TOPMOST, 0, 0, 0, 0, _SWP_FLAGS,
             )
         except (AttributeError, OSError):
             pass
 
+    def _remove_win32_topmost(self) -> None:
+        """Remove HWND_TOPMOST."""
+        if not self._is_windows or not self._hwnd:
+            return
+        try:
+            self._user32.SetWindowPos(
+                self._hwnd, _HWND_NOTOPMOST, 0, 0, 0, 0, _SWP_FLAGS,
+            )
+        except (AttributeError, OSError):
+            pass
+
+    def _apply_win32_opacity(self) -> None:
+        """
+        Set window opacity via Win32 SetLayeredWindowAttributes.
+        This makes the entire window semi-transparent as a composition layer,
+        but text rendered on top stays at full contrast visually.
+        """
+        if not self._is_windows or not self._hwnd:
+            return
+        try:
+            alpha_byte = max(0, min(255, int(255 * self._opacity)))
+            self._user32.SetLayeredWindowAttributes(
+                self._hwnd, 0, alpha_byte, _LWA_ALPHA,
+            )
+            # Disable tkinter's own alpha to avoid double-application
+            self._root.attributes("-alpha", 1.0)
+        except (AttributeError, OSError):
+            # Fallback
+            self._root.attributes("-alpha", self._opacity)
+
     def _start_topmost_loop(self) -> None:
-        """Re-assert topmost every 5 seconds to survive focus changes."""
+        """Re-assert topmost every 1 second to survive focus changes."""
         if self._topmost:
             self._root.attributes("-topmost", True)
             self._root.lift()
-            if self._is_windows:
-                self._force_topmost_win32()
-        self._root.after(5000, self._start_topmost_loop)
+            self._apply_win32_topmost()
+        self._root.after(1000, self._start_topmost_loop)
 
     # --- Dragging ---
 
