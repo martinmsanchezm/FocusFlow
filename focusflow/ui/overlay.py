@@ -19,6 +19,9 @@ TASK_COLORS = {
     "work": "#3b82f6",
     "break": "#f59e0b",
     "lunch": "#f97316",
+    "study": "#7B68EE",
+    "free": "#5BAD6F",
+    "personal": "#E0559A",
 }
 FREE_COLOR = "#6b7280"
 DAY_OFF_COLOR = "#a78bfa"
@@ -129,7 +132,7 @@ class OverlayWindow:
             self._time_label.config(text="No active task")
             self._accent_bar.config(bg=FREE_COLOR)
         else:
-            color = TASK_COLORS.get(task.task_type, TASK_COLORS["work"])
+            color = TASK_COLORS.get(task.task_type, "#888888")
             self._full_task_name = task.task
             display = task.task if len(task.task) <= max_chars else task.task[:max_chars - 1] + "\u2026"
             self._task_label.config(text=display, fg=color)

@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Optional
 
 VALID_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-VALID_TYPES = ["work", "break", "lunch"]
 
 
 class TaskBlock:
@@ -105,8 +104,8 @@ def validate_schedule(data: dict) -> list[str]:
                     _parse_time(block["end"])
                 except ValueError as e:
                     errors.append(f"{prefix}: {e}")
-            if "type" in block and block["type"] not in VALID_TYPES:
-                errors.append(f"{prefix}: unknown type '{block['type']}' (expected: {VALID_TYPES})")
+            if "type" in block and not isinstance(block["type"], str):
+                errors.append(f"{prefix}: 'type' must be a string")
     return errors
 
 

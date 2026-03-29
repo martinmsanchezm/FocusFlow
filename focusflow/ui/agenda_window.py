@@ -24,6 +24,9 @@ TASK_COLORS = {
     "work": "#3b82f6",
     "break": "#f59e0b",
     "lunch": "#f97316",
+    "study": "#7B68EE",
+    "free": "#5BAD6F",
+    "personal": "#E0559A",
 }
 
 DAY_LABELS = {
@@ -175,7 +178,7 @@ class AgendaWindow:
             )
 
             row_bg = ACTIVE_BG if is_active else BG_COLOR
-            color = TASK_COLORS.get(block.task_type, TASK_COLORS["work"])
+            color = TASK_COLORS.get(block.task_type, "#888888")
 
             row = tk.Frame(frame, bg=row_bg)
             row.pack(fill="x")
