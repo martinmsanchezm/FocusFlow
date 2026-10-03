@@ -78,7 +78,7 @@ FocusFlow/
 ### 1. Clone and install dependencies
 
 ```bash
-git clone https://github.com/nensanc/FocusFlow.git
+git clone https://github.com/martinmsanchezm/FocusFlow.git
 cd FocusFlow/focusflow
 pip install -r requirements.txt
 ```
@@ -166,7 +166,7 @@ Settings are saved to `%APPDATA%/FocusFlow/config.json` automatically (`~/.confi
 
 ## Author
 
-**Martin Sanchez** ([@nensanc](https://github.com/nensanc))
+**Martin Sanchez** ([@martinmsanchezm](https://github.com/martinmsanchezm))
 
 ## License
 
