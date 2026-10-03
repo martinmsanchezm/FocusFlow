@@ -54,8 +54,9 @@ Any other type string is accepted and shown in gray. When no block is active, th
 ## Project Structure
 
 ```text
-Pomodoro/
+FocusFlow/
 ├── LICENSE                      # MIT
+├── .gitignore
 └── focusflow/
     ├── main.py                  # Entry point (works from source and from the PyInstaller bundle)
     ├── app.py                   # FocusFlowApp: wires UI, scheduler, notifier and config; 10 s polling
@@ -74,10 +75,11 @@ Pomodoro/
 
 ## Quick Start
 
-### 1. Install dependencies
+### 1. Clone and install dependencies
 
 ```bash
-cd focusflow
+git clone https://github.com/nensanc/FocusFlow.git
+cd FocusFlow/focusflow
 pip install -r requirements.txt
 ```
 
